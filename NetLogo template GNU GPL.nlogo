@@ -27,6 +27,13 @@ to setup
   print "the (lack of) warranty, see the LICENCE section in the Info tab."
   clear-all
 
+  ; Control the seed
+
+  if random-seed? [
+    set rng-seed new-seed
+  ]
+  random-seed rng-seed
+
   ; Do the rest of the setup
 
   reset-ticks
@@ -119,6 +126,28 @@ NIL
 NIL
 NIL
 1
+
+SWITCH
+10
+51
+141
+84
+random-seed?
+random-seed?
+1
+1
+-1000
+
+INPUTBOX
+10
+86
+141
+146
+rng-seed
+0.0
+1
+0
+Number
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -837,6 +866,10 @@ NIL
 
 ## ChangeLog
 
+2023-11-01 Gary Polhill <gary.polhill@hutton.ac.uk>
+
+  * `setup`: Added seed control
+
 2019-06-16 Gary Polhill <gary.polhill@hutton.ac.uk>
 
   * Updated to NetLogo version 6.1
@@ -1150,7 +1183,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.1.0
+NetLogo 6.3.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
