@@ -14,18 +14,70 @@
 ; You should have received a copy of the GNU General Public License
 ; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+;2345678901234567890123456789012345678901234567890123456789012345678901234567890
+;        1         2         3         4         5         6         7         8
+
+extensions [ table ]
+
+globals [
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ; Globals needed for the template
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+  error?
+  warnings
+  notes
+  n-fails
+  n-tests
+
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ; Model-specific globals here
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+]
+
+to unit-test
+  clear-all
+
+  set n-fails 0
+  set n-tests 0
+
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ; Call unit testing procedures here
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ; End of unit test: report results
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+  output-print (word "Unit tests complete: " n-fails " failures of " n-tests " tests")
+  if n-tests > 0 [
+    output-print (word "Pass rate: " (precision ((n-tests - n-fails) * 100 / n-tests) 1) "%")
+  ]
+end
+
 
 ; {observer} setup
 ;
 ; Set up the model
 
 to setup
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ; Template setup code
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
   print "<program>  Copyright (C) <year>  <name of author>"
   print "This program comes with ABSOLUTELY NO WARRANTY."
   print "This is free software, and you are welcome to redistribute it"
   print "under certain conditions. For more information on this and"
   print "the (lack of) warranty, see the LICENCE section in the Info tab."
   clear-all
+
+  ; Initialize error? condition to false and create tables for warnings and notes
+
+  set error? false
+  set warnings table:make
+  set notes table:make
 
   ; Control the seed
 
@@ -34,7 +86,10 @@ to setup
   ]
   random-seed rng-seed
 
-  ; Do the rest of the setup
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ; Model-specific code to implement the setup
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 
   reset-ticks
 end
@@ -44,9 +99,127 @@ end
 ; Perform one timestep of the model
 
 to go
-  ; Code to implement the timestep
+  ; Check the error? condition
+
+  if error? [
+    print-progress (word "error tick " ticks)
+    tick
+    stop
+  ]
+
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ; Model-specific code to implement time step here
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
   tick
+end
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Unit testing procedures
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+to fail
+  set n-fails n-fails + 1
+  set n-tests n-tests + 1
+end
+
+to pass
+  set n-tests n-tests + 1
+end
+
+to assert-list-equals [ msg want get ]
+  (ifelse not (is-list? want and is-list? get) [
+    output-print (word msg ": FAIL (wanted "
+      (ifelse-value is-list? want [ "is" ] [ "is not" ]) " a list; got "
+      (ifelse-value is-list? get [ "is" ] [ "is not" ]) " a list)")
+    fail
+  ] length want != length get [
+    output-print (word msg ": FAIL (wanted list length " (length want)
+      "; got list length " (length get) ")")
+    fail
+  ] [
+    foreach (n-values (length want) [ i -> i ]) [ i ->
+      assert-equals (word msg " [" i "]") (item i want) (item i get)
+    ]
+    pass
+  ])
+end
+
+to assert-equals [ msg want get ]
+  ifelse want = get [
+    output-print (word msg ": OK")
+    pass
+  ] [
+    output-print (word msg ": FAIL (wanted \"" want "\"; got \"" get "\")")
+    fail
+  ]
+end
+
+to assert-true [ msg get? ]
+  (ifelse not is-boolean? get? [
+    output-print (word msg ": FAIL (wanted a boolean, got \"" get? "\")")
+    fail
+  ] get? [
+    output-print (word msg ": OK")
+    pass
+  ] [
+    output-print (word msg ": FAIL (wanted true; got false)")
+    fail
+  ])
+end
+
+to assert-false [ msg get? ]
+  (ifelse not is-boolean? get? [
+    output-print (word msg ": FAIL (wanted a boolean, got \"" get? "\")")
+    fail
+  ] get? [
+    output-print (word msg ": FAIL (wanted false; got true)")
+    fail
+  ] [
+    output-print (word msg ": OK")
+    pass
+  ])
+end
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Notification procedures
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+to output-error [string]
+  error string
+  set error? true
+end
+
+to output-warning [string]
+  if warnings = 0 [
+    set warnings table:make
+  ]
+  ifelse table:has-key? warnings string [
+    table:put warnings string 1 + table:get warnings string
+  ] [
+    output-print (word "WARNING [" timer "]: " string)
+    table:put warnings string 1
+  ]
+end
+
+to output-note [string]
+  if notes = 0 [
+    set notes table:make
+  ]
+  ifelse table:has-key? notes string [
+    table:put notes string 1 + table:get notes string
+  ] [
+    output-print (word "NOTE [" timer "]: " string)
+    table:put notes string 1
+  ]
+end
+
+to print-progress [string]
+  print (word "PROGRESS [" timer "]: " string)
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -148,6 +321,13 @@ rng-seed
 1
 0
 Number
+
+OUTPUT
+651
+12
+1088
+447
+10
 
 @#$#@#$#@
 ## WHAT IS IT?
