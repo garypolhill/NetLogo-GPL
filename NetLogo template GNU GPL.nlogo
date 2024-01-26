@@ -86,10 +86,17 @@ to setup
   ]
   random-seed rng-seed
 
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ; Model-specific code to implement the setup
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  carefully [
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ; Model-specific code to implement the setup
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
+  ] [
+    reset-ticks
+    ; Set the error? condition
+    output-error error-message
+  ]
 
   reset-ticks
 end
@@ -107,10 +114,17 @@ to go
     stop
   ]
 
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ; Model-specific code to implement time step here
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  carefully [
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ; Model-specific code to implement time step here
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
+  ] [
+    tick
+    ; Set the error? condition
+    output-error error-message
+  ]
   tick
 end
 
@@ -1045,6 +1059,12 @@ OUTPUT
 ```
 
 ## ChangeLog
+
+2024-01-26 Gary Polhill <gary.polhill@hutton.ac.uk>
+
+  * `setup`: Put `carefully` around model-specific code so that errors are caught and handled in headless mode
+  * `go`: Put `carefully` around model-specific code so that errors are caught and handled in headless mode
+
 
 2023-11-01 Gary Polhill <gary.polhill@hutton.ac.uk>
 
